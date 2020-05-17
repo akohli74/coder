@@ -1,0 +1,18 @@
+﻿{
+    "ServerConfiguration": {
+        "Name": "",
+        "Enabled": true,
+        "IPAddress":  "",
+        "Port": 0,
+        "ConnectionCount": 0,
+        "ListenerDelay": false,
+        "DelayDuration": 0,
+        "EncryptConnection": false,
+        "X509CertificatePath": "",
+        "QueueName": "",
+        "KeepConnectionOpen": false,
+        "ShutdownClientOnOpenSocket": false,
+        "RaiseEventOnReceive": false,
+        "ReadTimeout": 0
+    }
+}
