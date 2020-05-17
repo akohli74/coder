@@ -1,5 +1,6 @@
 # coder.net
 This is a a customized TCP/IP stack written in .NET Core
+Coded by Amrit Kohli (C) 2020, All rights reserved.
 
 It highlights some important features of .NET Core, C#, and TCP/IP.
 
