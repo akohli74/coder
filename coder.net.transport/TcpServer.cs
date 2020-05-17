@@ -2,23 +2,24 @@
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using coder.net.core;
+using coder.net.core.common;
+using coder.net.core.pubsub.messages;
+using coder.net.core.threading;
 using Microsoft.Extensions.Logging;
+using PubSub;
 
 namespace coder.net.transport
 {
-    public class TcpServer : ITcpServer
+    public class TcpServer : RunningTask, ITcpServer
     {
         public TcpClient Client { get; protected set; }
-        public string Name { get; }
-        public bool Stopped { get; set; }
 
         protected TcpListener Listener { get; set; }
-        protected CancellationTokenSource StopToken { get; set; }
 
-        protected readonly ILogger<TcpServer> _logger;
         protected readonly IServerConfiguration _config;
 
         protected IPAddress IpAddress { get; set; }
@@ -30,27 +31,35 @@ namespace coder.net.transport
         protected bool KeepConnectionOpen { get; }
         protected bool ShutdownClientOnOpenSocket { get; }
         protected bool RaiseEventOnReceive { get; private set; }
-        protected bool Restarting { get; set; } = false;
-
-        private bool _disposed = false;
 
         public TcpServer(ILoggerFactory loggerFactory, IServerConfiguration config)
+            : base(loggerFactory)
         {
-            _logger = loggerFactory?.CreateLogger<TcpServer>() ?? throw new ArgumentNullException(nameof(loggerFactory));
             _config = config ?? throw new ArgumentNullException(nameof(config));
+
+            if (!IPAddress.TryParse(_config.IpAddress, out var ipAddress))
+            {
+                IpAddress = IPAddress.Any;
+            }
+            else
+            {
+                IpAddress = ipAddress;
+            }
+
+            Name = _config.Name;
+            Port = _config.Port;
+            Connections = _config.ConnectionCount;
+            ListenerDelay = _config.ListenerDelay;
+            DelayDuration = _config.DelayDuration;
+            KeepConnectionOpen = _config.KeepConnectionOpen;
+            ShutdownClientOnOpenSocket = _config.ShutdownClientOnOpenSocket;
         }
 
-        public void Dipose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             try
             {
-                if(_disposed)
+                if(Disposed)
                 {
                     return;
                 }
@@ -69,93 +78,86 @@ namespace coder.net.transport
                     }
 
                     Listener = null;
-
-                    StopToken.Dispose();
                 }
-
-                _disposed = true;
             }
             catch (SocketException sox)
             {
-                _logger.LogError(sox, $"Socket Exception while disposing of the Server.  The Error Code is {sox.ErrorCode}.");
-                throw;
+                Logger.LogError(sox, $"Socket Exception while disposing of the Server.  The Error Code is {sox.ErrorCode}.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Disposing of the Server has caused an exception.");
-                throw;
+                Logger.LogError(ex, $"Disposing of the Server has caused an exception.");
             }
+
+            base.Dispose(disposing);
         }
 
-        public virtual async Task RunServer()
+        public override async Task<bool> Run()
         {
             try
             {
                 await SpawnServer().ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException oce)
             {
                 Stopped = true;
-                _logger.LogInformation($"Server on {IpAddress}:{Port} has shut down.  Attempting to restart...");
+                Logger.LogInformation($"Server on {IpAddress}:{Port} has shut down.  Attempting to restart...");
+                StopToken?.Dispose();
+
                 StopToken = new CancellationTokenSource();
-                // EventAggregator.GetEvent<StartEvent>().Publish(new StartMessage(true, Context));
+                EventHub.Publish(new StartMessage(UniqueIdentifier, true));
+                return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Thread running Server on {IpAddress}:{Port} has crashed.  Attempting to restart it...");
-                // ServerError(ex);
+                Logger.LogError(ex, $"Thread running Server on {IpAddress}:{Port} has crashed.  Attempting to restart it...");
+                OnError(ex);
+                return false;
             }
+
+            return true;
         }
 
-        public virtual void StopServer()
+        public override bool Stop()
         {
-            _logger.LogWarning($"Stopping server on {IpAddress}:{Port}.");
-            StopToken.Cancel();
-            Listener.Stop();
+            try
+            {
+                Logger.LogWarning($"Stopping server on {IpAddress}:{Port}.");
+                Listener.Stop();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Error while stopping TcpServer on {IpAddress}:{Port}.");
+                return false;
+            }
+
+            return base.Stop();
         }
 
-        public virtual async Task Restart()
+        public override async Task Restart()
         {
             try
             {
                 if (!Restarting)
                 {
-                    _logger.LogWarning($"Restarting server on {IpAddress}:{Port}.");
-
                     Restarting = true;
+
+                    Logger.LogWarning($"Restarting server on {IpAddress}:{Port}.");
 
                     if (!Stopped)
                     {
-                        StopToken.Cancel();
                         Listener?.Stop();
-                        await this.Timeout(5);
+                        await this.Timeout(2);
                     }
-
-                    if (StopToken.IsCancellationRequested)
-                    {
-                        StopToken.Dispose();
-                        StopToken = new CancellationTokenSource();
-                    }
-
-                    if (Stopped)
-                    {
-                        // EventAggregator.GetEvent<StartEvent>().Publish(new StartMessage(true, Context));
-                    }
-
-                    Restarting = false;
                 }
-            }
-            catch (OperationCanceledException oce)
-            {
-                _logger.LogWarning(oce, $"Server listening on {IpAddress}:{Port} is stopping.  Cannot restart a stopping server.");
-                Restarting = false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Exception while restarting server at {IpAddress}:{Port}");
-                Restarting = false;
-                // EventAggregator.GetEvent<StartEvent>().Publish(new StartMessage(true, Context));
+                Logger.LogError(ex, $"Exception while restarting server at {IpAddress}:{Port}");
+                EventHub.Publish(new StartMessage(UniqueIdentifier, true));
             }
+
+            await base.Restart();
         }
 
         protected async Task SpawnServer()
@@ -167,7 +169,7 @@ namespace coder.net.transport
                                 {
                                     Stopped = false;
 
-                                    _logger.LogInformation($"Starting server on {IpAddress}:{Port}.");
+                                    Logger.LogInformation($"Starting server on {IpAddress}:{Port}.");
 
                                     await RunServerAsync();
 
@@ -192,13 +194,13 @@ namespace coder.net.transport
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning($"Server on {IpAddress}:{Port} is shutting down...");
+                Logger.LogWarning($"Server on {IpAddress}:{Port} is shutting down...");
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while running the Server on {IpAddress}:{Port}...");
-                // ServerError(ex);
+                Logger.LogError(ex, $"Error while running the Server on {IpAddress}:{Port}...");
+                OnError(ex);
             }
         }
 
@@ -208,7 +210,7 @@ namespace coder.net.transport
             {
                 await OpenSocketAsync();
                 var data = await ReadAsync();
-                // OnData(data);
+                OnData(data);
             }
         }
 
@@ -217,7 +219,7 @@ namespace coder.net.transport
             while (!Restarting && !Stopped)
             {
                 var data = await ReadAsync();
-                // OnData(data);
+                OnData(data);
 
                 StopToken.Token.ThrowIfCancellationRequested();
             }
@@ -225,12 +227,11 @@ namespace coder.net.transport
 
         protected virtual async Task<Memory<byte>> ReadAsync()
         {
-            _logger.LogDebug($"Accepted connection from {Client?.Client?.RemoteEndPoint}");
+            Logger.LogDebug($"Accepted connection from {Client?.Client?.RemoteEndPoint}");
 
             if (RaiseEventOnReceive)
             {
-                // var message = new ReceivingMessage(Context);
-                // EventAggregator.GetEvent<ReceivingMessageEvent>().Publish(message);
+                await EventHub.PublishAsync(new Message(UniqueIdentifier));
                 RaiseEventOnReceive = false;
             }
 
@@ -242,7 +243,7 @@ namespace coder.net.transport
         {
             await StartListeningAsync();
 
-            _logger.LogDebug($"Waiting for connection on port {Port}");
+            Logger.LogDebug($"Waiting for connection on port {Port}");
 
             // use Task.Run to pass the cancellation token so the Listener stops when the Token is cancelled.
             Client = await Task.Run(() => Listener?.AcceptTcpClientAsync(), StopToken.Token);
@@ -283,26 +284,26 @@ namespace coder.net.transport
 
                 OpenSocket();
 
-                _logger.LogInformation($"Server is listening for connections on {IpAddress}:{Port}...");
+                Logger.LogInformation($"Server is listening for connections on {IpAddress}:{Port}...");
             }
             catch (SocketException sox)
             {
-                _logger.LogError(sox, $"Socket cannot be opened on {IpAddress}:{Port}.");
+                Logger.LogError(sox, $"Socket cannot be opened on {IpAddress}:{Port}.");
                 if (sox.ErrorCode.Equals(10049))
                 {
-                    _logger.LogInformation($"There is no client connected to {IpAddress}:{Port}.  Please connect one to continue.");
+                    Logger.LogInformation($"There is no client connected to {IpAddress}:{Port}.  Please connect one to continue.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to start Server configured to listen on {IpAddress}:{Port}.");
-                // ServerError(ex);
+                Logger.LogError(ex, $"Unable to start Server configured to listen on {IpAddress}:{Port}.");
+                OnError(ex);
             }
         }
 
         protected async Task<Memory<byte>> ReceiveAsync()
         {
-            _logger.LogDebug($"Received connection request from {Client?.Client?.RemoteEndPoint?.ToString()}.");
+            Logger.LogDebug($"Received connection request from {Client?.Client?.RemoteEndPoint?.ToString()}.");
 
             var data = new byte[1024];
 
@@ -337,37 +338,37 @@ namespace coder.net.transport
             }
             catch (ObjectDisposedException ode)
             {
-                _logger.LogError(ode, $"The socket was disposed before the Read operation completed on {IpAddress}:{Port}.");
+                Logger.LogError(ode, $"The socket was disposed before the Read operation completed on {IpAddress}:{Port}.");
             }
             catch (OperationCanceledException)
             {
                 StopToken.Dispose();
                 StopToken = new CancellationTokenSource();
-                // EventAggregator.GetEvent<StartEvent>().Publish(new StartMessage(true, Context));
+                EventHub.Publish(new StartMessage(UniqueIdentifier, true));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error while processing request from {Client?.Client?.RemoteEndPoint?.ToString()} on {IpAddress}:{Port}.");
-                // ServerError(ex);
+                Logger.LogError(ex, $"Error while processing request from {Client?.Client?.RemoteEndPoint?.ToString()} on {IpAddress}:{Port}.");
+                OnError(ex);
             }
 
             return new Memory<byte>(data);
+        }
+
+        protected virtual void OnData(Memory<byte> data)
+        {
+            Logger.LogInformation($"Received message from client at server listening on {IpAddress}:{Port} that is [{data.Length}] bytes long.");
+            EventHub.Publish(new DataMessage(UniqueIdentifier, data));
+        }
+
+        protected void OnError(Exception ex)
+        {
+            EventHub.Publish(new ErrorMessage(UniqueIdentifier, ex));
         }
 
         protected virtual IPEndPoint GetServerAddress()
         {
             return new IPEndPoint(IpAddress, Port);
         }
-
-        private async Task Timeout(short seconds)
-        {
-            await Task.Delay(seconds * 1000, StopToken.Token);
-        }
-
-        //protected void ServerError(Exception ex)
-        //{
-        //    var message = new ExceptionMessage(ex, Context);
-        //    EventAggregator.GetEvent<ExceptionEvent>().Publish(message);
-        //}
     }
 }

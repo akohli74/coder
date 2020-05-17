@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using coder.net.app;
 using coder.net.configuration;
 using coder.net.core;
 using coder.net.transport;
@@ -38,6 +39,7 @@ namespace coder.net.console
             IServiceCollection services = new ServiceCollection();
             services
                 .AddTransient<ITcpServer, TcpServer>()
+                .AddTransient<IController, Controller>()
                 .AddSingleton<IServerConfiguration, ServerConfiguration>()
                 .AddTransient<Bootstrapper>()
                 .AddLogging(configure => configure.AddConsole());

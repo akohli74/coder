@@ -10,12 +10,14 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.4" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.4" />
+    <PackageReference Include="PubSub" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\coder.net.configuration\coder.net.configuration.csproj" />
     <ProjectReference Include="..\coder.net.core\coder.net.core.csproj" />
     <ProjectReference Include="..\coder.net.transport\coder.net.transport.csproj" />
+    <ProjectReference Include="..\coder.net.app\coder.net.app.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="config.json">
