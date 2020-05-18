@@ -14,7 +14,9 @@ To see this project in action, run the following commands:
 
 `dotnet run`
 
-By doing this, you will see the Client sending the same message to the Server over and over again, as shown by the output from the application while it's running.
+By doing this, you will see the Client sending the same message to the Server over and over again, as shown by the output from the application while it's running as shown here:
+
+![](sample_run.png)
 
 ## To Run The Tests In This Project
 
@@ -26,7 +28,9 @@ To run the tests in this project, run the following commands:
 
 `dotnet test`
 
-The tests will pass.
+The tests will pass, as shown here:
+
+![](sample_test_run.png)
 
 # Features and Code Writeup
 

@@ -26,6 +26,6 @@
     <ProjectReference Include="..\coder.net.core\coder.net.core.csproj" />
     <ProjectReference Include="..\coder.net.transport\coder.net.transport.csproj" />
     <ProjectReference Include="..\coder.net.configuration\coder.net.configuration.csproj" />
-    <ProjectReference Include="..\coder.net.app\coder.net.app.csproj" />
+    <ProjectReference Include="..\coder.net.application\coder.net.application.csproj" />
   </ItemGroup>
 </Project>

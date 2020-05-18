@@ -12,14 +12,13 @@ using PubSub;
 using Microsoft.Extensions.DependencyInjection;
 using coder.net.core;
 using coder.net.transport;
-using coder.net.app;
 using coder.net.configuration;
 using coder.net.core.pubsub.messages;
-using Microsoft.Extensions.Configuration;
+using coder.net.application;
 
 namespace coder.net.tests
 {
-	public class ServerTests
+    public class ServerTests
 	{
 		private const string TestData = "this is a major victory!";
 
