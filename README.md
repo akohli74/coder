@@ -5,6 +5,13 @@ Coded by Amrit Kohli (C) 2020, All rights reserved.
 
 It highlights some important features of .NET Core, C#, and TCP/IP.
 
+To see this project in action, run the following commands:
+
+`git clone https://github.com/akohli74/coder.net.git`
+`cd coder.net/coder.net.console`
+`dotnet test`
+`dotnet run`
+
 ### .NET Core
 
   * I used the built-in IoC features of .NET Core, which can be seen in Program.cs of the Console app.

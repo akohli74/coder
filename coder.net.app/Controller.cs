@@ -44,7 +44,8 @@ namespace coder.net.app
                 while (!Restarting && !Stopped)
                 {
                     await Task.Delay(1000);
-                    Client.Send(Encoding.ASCII.GetBytes(data));
+                    var dataBytes = Encoding.ASCII.GetBytes(data, 0, data.Length);
+                    Client.Send(new Memory<byte>(dataBytes, 0, data.Length));
                 }
             }
             catch (Exception ex)
@@ -66,7 +67,7 @@ namespace coder.net.app
 
         private void OnData(DataMessage data)
         {
-            Logger.LogInformation($"Data received from client and it reads as follows: [{Encoding.ASCII.GetString(data.Payload.ToArray())}]");
+            Logger.LogInformation($"Data received from client and it reads as follows: [{Encoding.ASCII.GetString(data.Payload.ToArray()).Trim()}]");
         }
 
         private async Task OnStart(StartMessage message)
