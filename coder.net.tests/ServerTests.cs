@@ -111,12 +111,11 @@ namespace coder.net.tests
 
 		private ServiceProvider ConfigureServices()
 		{
-			var config = new Mock<IServerConfiguration>();
 			IServiceCollection services = new ServiceCollection();
 			services
 				.AddTransient<ITcpServer, TcpServer>()
 				.AddTransient<IController, Controller>()
-				.AddSingleton<IServerConfiguration, ServerConfiguration>()
+				.AddSingleton(new ServerConfiguration())
 				.AddLogging(configure => configure.AddConsole());
 
 			return services.BuildServiceProvider();

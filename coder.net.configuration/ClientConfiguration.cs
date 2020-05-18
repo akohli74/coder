@@ -3,7 +3,7 @@ using coder.net.core;
 
 namespace coder.net.configuration
 {
-    public class ClientConfiguration : IClientConfiguration
+    public class ClientConfiguration
     {
         public string Name { get; set; }
 

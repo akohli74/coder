@@ -22,7 +22,6 @@ namespace coder.net.application
         {
             Server = server ?? throw new ArgumentNullException(nameof(server));
             Client = client ?? throw new ArgumentNullException(nameof(client));
-            Logger = loggerFactory?.CreateLogger<Controller>() ?? throw new ArgumentNullException(nameof(loggerFactory));
             _hub = Hub.Default ?? throw new InvalidOperationException($"The PubSub Hub does not have a default hub - {nameof(Hub)}");
 
             StopToken = new CancellationTokenSource();

@@ -18,7 +18,7 @@ namespace coder.net.transport
 	{
 		protected TcpClient Sender { get; set; }
 
-		protected readonly IClientConfiguration Config;
+		protected readonly ClientConfiguration Config;
 		protected ConcurrentQueue<Memory<byte>> Queue { get; } = new ConcurrentQueue<Memory<byte>>();
 		protected IPAddress IpAddress { get; }
 		protected int Port { get; }
