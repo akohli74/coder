@@ -51,7 +51,7 @@ namespace coder.net.application
                 return false;
             }
 
-            return false;
+            return true;
         }
 
         private void BootstrapEvents()
