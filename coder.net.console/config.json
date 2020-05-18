@@ -1,10 +1,10 @@
 ﻿{
     "ServerConfiguration": {
-        "Name": "",
+        "Name": "(localhost-server)",
         "Enabled": true,
-        "IPAddress":  "",
-        "Port": 0,
-        "ConnectionCount": 0,
+        "IPAddress": "127.0.0.1",
+        "Port": 8000,
+        "ConnectionCount": 1,
         "ListenerDelay": false,
         "DelayDuration": 0,
         "EncryptConnection": false,
@@ -14,5 +14,15 @@
         "ShutdownClientOnOpenSocket": false,
         "RaiseEventOnReceive": false,
         "ReadTimeout": 0
+    },
+    "ClientConfiguration": {
+        "Name": "(localhost-client)",
+        "Enabled": true,
+        "RemoteIpAddress": "127.0.0.1",
+        "RemotePort": 8000,
+        "EncryptConnection": false,
+        "ServerName": "",
+        "CertificateName": "",
+        "QueueName": "client_queue"
     }
 }

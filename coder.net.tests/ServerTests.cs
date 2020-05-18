@@ -15,6 +15,7 @@ using coder.net.transport;
 using coder.net.app;
 using coder.net.configuration;
 using coder.net.core.pubsub.messages;
+using Microsoft.Extensions.Configuration;
 
 namespace coder.net.tests
 {
@@ -25,13 +26,16 @@ namespace coder.net.tests
 		private readonly Hub _hub = Hub.Default;
 
 		private readonly ILoggerFactory _loggerFactory;
-		private readonly Mock<IServerConfiguration> _configMock;
+		private readonly Mock<ServerConfiguration> _configMock;
+		private readonly Mock<IConfiguration> _config;
 
 		public ServerTests()
 		{
 			var factory = new Mock<ILoggerFactory>();
 			_loggerFactory = new LoggerFactory();
-			_configMock = new Mock<IServerConfiguration>();
+			_configMock = new Mock<ServerConfiguration>();
+			_config = new Mock<IConfiguration>();
+			_config.Setup(x => x.Get<ServerConfiguration>()).Returns(_configMock.Object);
 			var services = ConfigureServices();
 
 			_configMock.Setup(x => x.Name).Returns("CommandServer");

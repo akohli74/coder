@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\coder.net.core\coder.net.core.csproj" />
+    <ProjectReference Include="..\coder.net.configuration\coder.net.configuration.csproj" />
   </ItemGroup>
 </Project>

@@ -25,23 +25,30 @@ namespace coder.net.console
             serviceProvider.Dispose();
         }
 
-        static IServerConfiguration BuildConfiguration()
+        static IConfiguration BuildConfiguration()
         {
             var configBuilder = new ConfigurationBuilder();
-            configBuilder.AddJsonFile("config.json");
-            var config = configBuilder.Build();
-            return config.Get<ServerConfiguration>();
+            configBuilder.AddJsonFile(path: "./config.json", optional: false, reloadOnChange: true);
+            return configBuilder.Build();
         }
 
         static ServiceProvider ConfigureServices()
         {
             var config = BuildConfiguration();
+            var serverConfig = new ServerConfiguration();
+            var clientConfig = new ClientConfiguration();
+
+            config.Bind("ServerConfiguration", serverConfig);
+            config.Bind("ClientConfiguration", clientConfig);
+
             IServiceCollection services = new ServiceCollection();
             services
                 .AddTransient<ITcpServer, TcpServer>()
+                .AddTransient<IClient, Client>()
                 .AddTransient<IController, Controller>()
-                .AddSingleton<IServerConfiguration, ServerConfiguration>()
                 .AddTransient<Bootstrapper>()
+                .AddSingleton(serverConfig)
+                .AddSingleton(clientConfig)
                 .AddLogging(configure => configure.AddConsole());
 
             return services.BuildServiceProvider();

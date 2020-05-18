@@ -12,23 +12,43 @@ namespace coder.net.app
     public class Controller : RunningTask, IController
     {
         protected ITcpServer Server { get; private set; }
+        protected IClient Client { get; private set; }
 
         private Hub _hub;
 
-        public Controller(ILoggerFactory loggerFactory, ITcpServer server)
+        public Controller(ILoggerFactory loggerFactory, ITcpServer server, IClient client)
             : base(loggerFactory)
         {
             Server = server ?? throw new ArgumentNullException(nameof(server));
+            Client = client ?? throw new ArgumentNullException(nameof(client));
             Logger = loggerFactory?.CreateLogger<Controller>() ?? throw new ArgumentNullException(nameof(loggerFactory));
             _hub = Hub.Default ?? throw new InvalidOperationException($"The PubSub Hub does not have a default hub - {nameof(Hub)}");
 
             StopToken = new CancellationTokenSource();
         }
 
-        public async override Task<bool> Run()
+        public override async Task<bool> Run()
         {
-            BootstrapEvents();
-            return await Server.Run().ConfigureAwait(false);
+            try
+            {
+                Stopped = false;
+
+                BootstrapEvents();
+                _hub.Publish(new StartMessage(Server.UniqueIdentifier, true));
+                _hub.Publish(new StartMessage(Client.UniqueIdentifier, true));
+
+                while (!Restarting && !Stopped)
+                {
+                    await Task.Delay(1000);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, $"Controller {Name} with Id {UniqueIdentifier} has encountered an error while attempting to start...");
+                return false;
+            }
+
+            return false;
         }
 
         private void BootstrapEvents()
@@ -43,6 +63,7 @@ namespace coder.net.app
             _ = message?.MessageId switch
             {
                 var id when id.Equals(Server.UniqueIdentifier) => await StartServer(message.Start),
+                var id when id.Equals(Client.UniqueIdentifier) => await StartClient(message.Start),
                 null => throw new ArgumentException(message: $"Invalid Message: A message must have a Unique Id.  This message has no Id."),
                 _ => throw new ArgumentException(message: $"Unhandled Message: A message with an unrecognized Id has been received.  The Id of this message is {message?.MessageId}.")
             };
@@ -52,8 +73,17 @@ namespace coder.net.app
         {
             return start switch
             {
-                true => await Server.Run(),
+                true => await Server.Run().ConfigureAwait(false),
                 _ => Server.Stop()
+            };
+        }
+
+        private async Task<bool> StartClient(bool start)
+        {
+            return start switch
+            {
+                true => await Client.Run().ConfigureAwait(false),
+                _ => Client.Stop()
             };
         }
 

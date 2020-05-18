@@ -52,7 +52,7 @@ namespace coder.net.core.threading
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, $"Disposing of the Runnable Task has caused an exception.");
+                Logger.LogError(ex, $"Disposing of the Runnable Task with Id {UniqueIdentifier} and Name {Name} has caused an exception.");
                 throw;
             }
         }
@@ -63,7 +63,7 @@ namespace coder.net.core.threading
             {
                 Restarting = true;
 
-                Logger.LogWarning($"Restarting Task with Id {UniqueIdentifier}.");
+                Logger.LogWarning($"Restarting Task with Id {UniqueIdentifier} and Name {Name}.");
 
                 if (!Stopped)
                 {
@@ -83,26 +83,55 @@ namespace coder.net.core.threading
             }
             catch (OperationCanceledException oce)
             {
-                Logger.LogWarning(oce, $"Task running with Id {UniqueIdentifier} is stopping.  Cannot restart a stopping Task.");
+                Logger.LogWarning(oce, $"Task running with Id {UniqueIdentifier} and Name {Name} is stopping.  Cannot restart a stopping Task.");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, $"Exception while restarting Task with Id {UniqueIdentifier}.");
+                Logger.LogError(ex, $"Exception while restarting Task with Id {UniqueIdentifier} and Name {Name}.");
                 EventHub.Publish(new StartMessage(UniqueIdentifier, true));
             }
 
             Restarting = false;
         }
 
-        public virtual Task<bool> Run()
+        public virtual async Task<bool> Run()
         {
-            return Task.FromResult<bool>(true);
+            return await Task.FromResult(true);
+        }
+
+        protected virtual async Task RunAsync()
+        {
+            await Task.FromCanceled(StopToken.Token);
+        }
+
+        protected virtual async Task SpawnProcess()
+        {
+            await Task.Factory.StartNew(
+                            async () =>
+                            {
+                                if (Stopped)
+                                {
+                                    Stopped = false;
+
+                                    Logger.LogInformation($"Starting process with UniqueIdentifier {UniqueIdentifier} and Name {Name}.");
+
+                                    await RunAsync();
+
+                                    Stopped = true;
+                                }
+
+                            }, StopToken.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap().ConfigureAwait(false);
         }
 
         public virtual bool Stop()
         {
             StopToken?.Cancel();
             return true;
+        }
+
+        protected void OnError(Exception ex)
+        {
+            EventHub.Publish(new ErrorMessage(UniqueIdentifier, ex));
         }
 
         protected async Task Timeout(short seconds)

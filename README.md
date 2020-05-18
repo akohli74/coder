@@ -21,6 +21,7 @@ It highlights some important features of .NET Core, C#, and TCP/IP.
 ### TCP/IP
 
   * I created a Server (Listener) that will establish a connection with a client that initiates a connection to it.
+  * I created a Client (Sender) that will initiate a connection to a server.
   * All of my communications are handled as asynchronous communications.
   
 ### Running Task
@@ -28,5 +29,4 @@ It highlights some important features of .NET Core, C#, and TCP/IP.
   * The base class handles all the logic to Start, Stop, Restart, and Dispose of a "runnable" Task.
 
 #### Limitations/Known Issues
-  * Where's the Client? (coming in the future)
-  * Can only have one server at a time.
+  * Can only have one server and one client at a time.  Future versions will support a collection of Servers and Clients.
