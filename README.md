@@ -18,6 +18,10 @@ By doing this, you will see the Client sending the same message to the Server ov
 
 ![](sample_run.png)
 
+For best results, and performance, use a device with a Windows OS on it, as shown here:
+
+![](sample_run_windows.png)
+
 ## To Run The Tests In This Project
 
 To run the tests in this project, run the following commands:
@@ -31,6 +35,10 @@ To run the tests in this project, run the following commands:
 The tests will pass, as shown here:
 
 ![](sample_test_run.png)
+
+For best results, and performance, use a device with a Windows OS on it, as shown here:
+
+![](sample_test_run_windows.png)
 
 # Features and Code Writeup
 
@@ -59,3 +67,5 @@ The tests will pass, as shown here:
 
 #### Limitations/Known Issues
   * Can only have one server and one client at a time.  Future versions will support a collection of Servers and Clients.
+  * dotnet core v3.1 runs incredibly slowly on macOS systems and it is very buggy.
+  * Visual Studio's IDE has major bugs on macOS systems, often requiring a restart to correct.
