@@ -27,6 +27,8 @@ namespace coder.net.core
 
 		bool ShutdownClientOnOpenSocket { get; set; }
 
+        bool RaiseEventOnReceive { get; set; }
+
 		int ReadTimeout { get; set; }
 	}
 }

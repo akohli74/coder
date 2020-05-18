@@ -12,6 +12,7 @@
         "QueueName": "",
         "KeepConnectionOpen": false,
         "ShutdownClientOnOpenSocket": false,
+        "RaiseEventOnReceive": false,
         "ReadTimeout": 0
     }
 }

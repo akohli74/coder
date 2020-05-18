@@ -53,6 +53,7 @@ namespace coder.net.transport
             DelayDuration = _config.DelayDuration;
             KeepConnectionOpen = _config.KeepConnectionOpen;
             ShutdownClientOnOpenSocket = _config.ShutdownClientOnOpenSocket;
+            RaiseEventOnReceive = _config.RaiseEventOnReceive;
         }
 
         protected override void Dispose(bool disposing)
@@ -98,7 +99,7 @@ namespace coder.net.transport
             {
                 await SpawnServer().ConfigureAwait(false);
             }
-            catch (OperationCanceledException oce)
+            catch (OperationCanceledException)
             {
                 Stopped = true;
                 Logger.LogInformation($"Server on {IpAddress}:{Port} has shut down.  Attempting to restart...");

@@ -64,7 +64,7 @@ namespace coder.net.app
 
         private void OnError(ErrorMessage message)
         {
-
+            // TODO: Handle/Notify errors
         }
     }
 }
