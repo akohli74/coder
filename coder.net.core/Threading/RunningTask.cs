@@ -99,6 +99,11 @@ namespace coder.net.core.threading
             return await Task.FromResult(true);
         }
 
+        public override string ToString()
+        {
+            return $"{Name}-{UniqueIdentifier}";
+        }
+
         protected virtual async Task RunAsync()
         {
             await Task.FromCanceled(StopToken.Token);
