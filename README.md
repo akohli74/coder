@@ -8,8 +8,11 @@ It highlights some important features of .NET Core, C#, and TCP/IP.
 To see this project in action, run the following commands:
 
 `git clone https://github.com/akohli74/coder.net.git`
+
 `cd coder.net/coder.net.console`
+
 `dotnet test`
+
 `dotnet run`
 
 ### .NET Core
