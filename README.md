@@ -7,13 +7,16 @@ It highlights some important features of .NET Core, C#, and TCP/IP.
 
 To see this project in action, run the following commands:
 
-`git clone https://github.com/akohli74/coder.net.git`
+```git clone https://github.com/akohli74/coder.net.git
+cd coder.net/coder.net.console
+dotnet run```
 
-`cd coder.net/coder.net.console`
+To run the tests in this project, run the following commands:
 
-`dotnet test`
+```git clone https://github.com/akohli74/coder.net.git
+cd coder.net/coder.net.tests
+dotnet test```
 
-`dotnet run`
 
 ### .NET Core
 
