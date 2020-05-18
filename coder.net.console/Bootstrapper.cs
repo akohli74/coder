@@ -20,9 +20,9 @@ namespace coder.net.console
             _controller = controller ?? throw new ArgumentNullException(nameof(controller));
         }
 
-        public async Task Run()
+        public async Task<bool> Run()
         {
-            await _controller.Run();
+            return await _controller.Run();
         }
     }
 }
