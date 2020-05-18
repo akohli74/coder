@@ -79,17 +79,17 @@ namespace coder.net.transport
 			base.Dispose(disposing);
 		}
 
-		public bool QueueCommand(Memory<byte> command)
+		public bool Send(Memory<byte> data)
 		{
 			try
 			{
-				Logger.LogDebug($"Queuing byte stream command for {Name} - {IpAddress}:{Port}.");
+				Logger.LogDebug($"Queuing byte stream data for {Name} - {IpAddress}:{Port}.");
 
-				Queue.Enqueue(command);
+				Queue.Enqueue(data);
 			}
 			catch (Exception ex)
 			{
-				Logger.LogError(ex, $"Error while queuing command for {Name} - {IpAddress}:{Port}.");
+				Logger.LogError(ex, $"Error while queuing data for {Name} - {IpAddress}:{Port}.");
 				return false;
 			}
 

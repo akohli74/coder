@@ -10,7 +10,7 @@
         "EncryptConnection": false,
         "X509CertificatePath": "",
         "QueueName": "",
-        "KeepConnectionOpen": false,
+        "KeepConnectionOpen": true,
         "ShutdownClientOnOpenSocket": false,
         "RaiseEventOnReceive": false,
         "ReadTimeout": 0

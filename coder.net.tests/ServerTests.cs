@@ -26,23 +26,21 @@ namespace coder.net.tests
 		private readonly Hub _hub = Hub.Default;
 
 		private readonly ILoggerFactory _loggerFactory;
-		private readonly Mock<ServerConfiguration> _configMock;
-		private readonly Mock<IConfiguration> _config;
+		private readonly ServerConfiguration _config;
 
 		public ServerTests()
 		{
 			var factory = new Mock<ILoggerFactory>();
 			_loggerFactory = new LoggerFactory();
-			_configMock = new Mock<ServerConfiguration>();
-			_config = new Mock<IConfiguration>();
-			_config.Setup(x => x.Get<ServerConfiguration>()).Returns(_configMock.Object);
+			_config = new ServerConfiguration()
+			{
+				Name = "Server",
+				IpAddress = "127.0.0.1",
+				ConnectionCount = 1,
+				Port = 8084,
+				KeepConnectionOpen = true
+			};
 			var services = ConfigureServices();
-
-			_configMock.Setup(x => x.Name).Returns("CommandServer");
-			_configMock.Setup(x => x.IpAddress).Returns("127.0.0.1");
-			_configMock.Setup(x => x.ConnectionCount).Returns(1);
-			_configMock.Setup(x => x.Port).Returns(8084);
-			_configMock.Setup(x => x.KeepConnectionOpen).Returns(false);
 		}
 
 		[Fact]
@@ -54,7 +52,7 @@ namespace coder.net.tests
 
 			using (var are = new AutoResetEvent(false))
 			{
-				using (sut = new TcpServer(_loggerFactory, _configMock.Object))
+				using (sut = new TcpServer(_loggerFactory, _config))
 				{
 					buffer = new byte[1024];
 					buffer.Initialize();

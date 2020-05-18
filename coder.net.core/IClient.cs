@@ -16,6 +16,6 @@ namespace coder.net.core
 
 		bool Stop();
 
-		bool QueueCommand(Memory<byte> command);
+		bool Send(Memory<byte> data);
 	}
 }

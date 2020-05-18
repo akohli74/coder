@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using coder.net.core;
@@ -33,6 +35,8 @@ namespace coder.net.app
             {
                 Stopped = false;
 
+                var data = $"I'm sending myself to the server...";
+
                 BootstrapEvents();
                 _hub.Publish(new StartMessage(Server.UniqueIdentifier, true));
                 _hub.Publish(new StartMessage(Client.UniqueIdentifier, true));
@@ -40,6 +44,7 @@ namespace coder.net.app
                 while (!Restarting && !Stopped)
                 {
                     await Task.Delay(1000);
+                    Client.Send(Encoding.ASCII.GetBytes(data));
                 }
             }
             catch (Exception ex)
@@ -56,6 +61,12 @@ namespace coder.net.app
             _hub.Subscribe<StartMessage>(this, OnStart);
             _hub.Subscribe<DataReceivedMessage>(this, OnDataReceived);
             _hub.Subscribe<ErrorMessage>(this, OnError);
+            _hub.Subscribe<DataMessage>(this, OnData);
+        }
+
+        private void OnData(DataMessage data)
+        {
+            Logger.LogInformation($"Data received from client and it reads as follows: [{Encoding.ASCII.GetString(data.Payload.ToArray())}]");
         }
 
         private async Task OnStart(StartMessage message)
