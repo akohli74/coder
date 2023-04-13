@@ -21,25 +21,7 @@ namespace coder.net.console
         {
             var serviceProvider = ConfigureServices();
 
-            _ = Task.Run(serviceProvider.GetService<Bootstrapper>().Run).ConfigureAwait(false);
-
-            var input = Console.ReadLine();
-            while (input != "x")
-            {
-                switch (input)
-                {
-                    case "stop":
-                        serviceProvider.GetService<IController>()?.Stop();
-                        break;
-                    case "start":
-                        _ = Task.Run(serviceProvider.GetService<IController>().Run);
-                        break;
-                    default:
-                        break;
-                }
-
-                input = Console.ReadLine();
-            }
+            _ = await Task.Run(serviceProvider.GetService<Bootstrapper>().Run).ConfigureAwait(false);
 
             serviceProvider.Dispose();
         }
