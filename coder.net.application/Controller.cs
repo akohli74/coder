@@ -54,6 +54,14 @@ namespace coder.net.application
             return true;
         }
 
+        public override bool Stop()
+        {
+            _hub.Publish(new StartMessage(Server.UniqueIdentifier, false));
+            _hub.Publish(new StartMessage(Client.UniqueIdentifier, false));
+
+            return base.Stop();
+        }
+
         private void BootstrapEvents()
         {
             _hub.Subscribe<StartMessage>(this, OnStart);

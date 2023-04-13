@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using coder.net.application;
 using coder.net.configuration;
 using coder.net.core;
@@ -20,7 +21,25 @@ namespace coder.net.console
         {
             var serviceProvider = ConfigureServices();
 
-            await serviceProvider.GetService<Bootstrapper>().Run();
+            _ = Task.Run(serviceProvider.GetService<Bootstrapper>().Run).ConfigureAwait(false);
+
+            var input = Console.ReadLine();
+            while (input != "x")
+            {
+                switch (input)
+                {
+                    case "stop":
+                        serviceProvider.GetService<IController>()?.Stop();
+                        break;
+                    case "start":
+                        _ = Task.Run(serviceProvider.GetService<IController>().Run);
+                        break;
+                    default:
+                        break;
+                }
+
+                input = Console.ReadLine();
+            }
 
             serviceProvider.Dispose();
         }
